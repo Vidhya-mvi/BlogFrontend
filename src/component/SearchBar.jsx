@@ -22,7 +22,7 @@ const Searchbar = () => {
 
     try {
       console.log("Searching for:", term);
-      const { data } = await axios.get(`${import.meta.env.VITE_API_URL}/api/blogs/search?query=${term}`);
+      const { data } = await axios.get(`${import.meta.env.VITE_API_URL}/api/blogs/search?query=${term}`, { withCredentials: true });
 
       if (data.length > 0) {
         setResults(data);

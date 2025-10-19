@@ -27,7 +27,7 @@ const OtpVerification = () => {
       const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/verify-otp`, {
         userId,
         otp,
-      });
+      }, { withCredentials: true });
 
       setSuccess(res.data.message || "OTP Verified Successfully!");
       setTimeout(() => navigate("/login"), 1500);

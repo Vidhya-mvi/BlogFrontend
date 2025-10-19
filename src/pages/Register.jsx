@@ -37,7 +37,8 @@ const Register = () => {
       setLoading(true);
       const res = await axios.post(
         `${import.meta.env.VITE_API_URL}/api/auth/register`,
-        formData
+        formData,
+        { withCredentials: true }
       );
       setSuccess(" Registration successful! Redirecting to OTP...");
       setTimeout(() => {
