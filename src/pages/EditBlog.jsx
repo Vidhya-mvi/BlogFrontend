@@ -16,24 +16,40 @@ const EditBlog = () => {
   const [alertType, setAlertType] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const genres = ["Technology", "Health", "Lifestyle", "Finance", "Education", "Anime", "Books", "Art", "Manhwa","Nature","myths"];
+  const genres = [
+    "Technology",
+    "Health",
+    "Lifestyle",
+    "Finance",
+    "Education",
+    "Anime",
+    "Books",
+    "Art",
+    "Manhwa",
+    "Nature",
+    "Myths",
+  ];
 
   useEffect(() => {
     const fetchBlog = async () => {
       try {
-        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/blogs/${id}`, {
-          withCredentials: true,
-        });
+        const res = await axios.get(
+          `${import.meta.env.VITE_API_URL}/api/blogs/${id}`,
+          { withCredentials: true }
+        );
 
-        setTitle(res.data.title);
-        setContent(res.data.content);
+        setTitle(res.data.title || "");
+        setContent(res.data.content || "");
         setGenre(res.data.genre || "");
-
         if (res.data.image) {
-          setPreview(`${import.meta.env.VITE_API_URL}${res.data.image}`);
+          setPreview(
+            res.data.image.startsWith("http")
+              ? res.data.image
+              : `${import.meta.env.VITE_API_URL}${res.data.image}`
+          );
         }
       } catch (err) {
-        console.error(" Failed to fetch blog:", err.response || err.message);
+        console.error("Failed to fetch blog:", err.response || err.message);
         setError(err.response?.data?.message || "Failed to load blog. Please try again.");
       }
     };
@@ -73,9 +89,9 @@ const EditBlog = () => {
     }
 
     const formData = new FormData();
-    formData.append("title", title);
-    formData.append("content", content);
-    formData.append("genre", genre);
+    formData.append("title", title || "");
+    formData.append("content", content || "");
+    formData.append("genre", genre || "");
     if (image) formData.append("image", image);
 
     try {
@@ -107,51 +123,75 @@ const EditBlog = () => {
           }}
         >
           {alertMessage}
-          <button onClick={dismissAlert} style={styles.closeButton}>✖</button>
+          <button onClick={dismissAlert} style={styles.closeButton}>
+            ✖
+          </button>
         </div>
       )}
 
       {error && <p style={styles.error}>{error}</p>}
 
       <div style={styles.wrapper}>
-        
         <form onSubmit={handleUpdate} style={styles.form}>
           <h1 style={styles.heading}>Edit Blog</h1>
 
-          <input type="text" placeholder="Blog Title" value={title} onChange={(e) => setTitle(e.target.value)} required style={styles.input} />
+          <input
+            type="text"
+            placeholder="Blog Title"
+            value={title || ""}
+            onChange={(e) => setTitle(e.target.value)}
+            required
+            style={styles.input}
+          />
 
           <textarea
             placeholder="Blog Content"
-            value={content}
+            value={content || ""}
             onChange={(e) => setContent(e.target.value)}
-            rows={content.split("\n").length + 5}
+            rows={(content || "").split("\n").length + 5}
             required
             style={styles.textarea}
           />
-          <p style={{ color: "#555", fontSize: "0.8rem" }}>{content.length}/1000 characters</p>
+          <p style={{ color: "#555", fontSize: "0.8rem" }}>
+            {(content || "").length}/1000 characters
+          </p>
 
-          <select value={genre} onChange={(e) => setGenre(e.target.value)} required style={styles.select}>
-            <option value="" disabled>Select a Genre</option>
+          <select
+            value={genre || ""}
+            onChange={(e) => setGenre(e.target.value)}
+            required
+            style={styles.select}
+          >
+            <option value="" disabled>
+              Select a Genre
+            </option>
             {genres.map((g, index) => (
-              <option key={index} value={g}>{g}</option>
+              <option key={index} value={g}>
+                {g}
+              </option>
             ))}
           </select>
 
           <input type="file" onChange={handleImageChange} style={styles.fileInput} />
 
-          <button type="submit" style={styles.button} disabled={!title || !content || !genre || loading}>
+          <button
+            type="submit"
+            style={styles.button}
+            disabled={!title || !content || !genre || loading}
+          >
             {loading ? "Updating..." : "Update Blog"}
           </button>
         </form>
 
-       
         <div style={styles.previewContainer}>
           <h2 style={styles.previewTitle}>Live Preview</h2>
           <div style={styles.blogCard}>
             {preview && <img src={preview} alt="Preview" style={styles.blogImage} />}
             <div style={styles.blogContent}>
               <h3 style={styles.blogTitle}>{title || "Blog Title"}</h3>
-              <p style={styles.blogText}>{content ? content.slice(0, 100) + "..." : "Blog content preview..."}</p>
+              <p style={styles.blogText}>
+                {(content || "").slice(0, 100) + "..."}
+              </p>
               <span style={styles.blogGenre}>{genre || "Genre"}</span>
             </div>
           </div>
@@ -160,7 +200,6 @@ const EditBlog = () => {
     </div>
   );
 };
-
 
 const styles = {
   container: {
@@ -214,7 +253,14 @@ const styles = {
   textarea: { padding: "10px", borderRadius: "5px", border: "1px solid #ddd", resize: "none" },
   select: { padding: "10px", borderRadius: "5px", border: "1px solid #ddd" },
   fileInput: { border: "none" },
-  button: { backgroundColor: "#4CAF50", color: "#fff", padding: "10px", borderRadius: "5px", border: "none", cursor: "pointer" },
+  button: {
+    backgroundColor: "#4CAF50",
+    color: "#fff",
+    padding: "10px",
+    borderRadius: "5px",
+    border: "none",
+    cursor: "pointer",
+  },
   previewContainer: {
     flex: 1,
     backgroundColor: "#fff",
@@ -225,7 +271,7 @@ const styles = {
   previewTitle: { textAlign: "center", color: "#333" },
   blogImage: { width: "100%", maxHeight: "500px", objectFit: "cover", borderRadius: "5px" },
   blogTitle: { color: "#333" },
-  blogText: { color: "#666", fontSize: "14px",whiteSpace: "pre-line" },
+  blogText: { color: "#666", fontSize: "14px", whiteSpace: "pre-line" },
   blogGenre: { fontWeight: "bold", fontSize: "12px", color: "#888" },
 };
 
