@@ -143,10 +143,9 @@ const Home = () => {
                 <h2 style={{ fontSize: "1rem", color: "#333" }}>{blog.title}</h2>
 
                 <p style={{ color: "#555", fontSize: "0.8rem" }}>
-                  {expandedBlogs[blog._id] || ((blog.content || "").length <= 80)
-                    ? (blog.content || "")
-                    : `${(blog.content || "").substring(0, 80)}... `}
-
+                  {expandedBlogs[blog._id] || (blog.content || "").length <= 80
+                    ? blog.content
+                    : `${blog.content.substring(0, 80)}... `}
                   {(blog.content || "").length > 80 && (
                     <button
                       onClick={(e) => {
@@ -166,7 +165,6 @@ const Home = () => {
                     </button>
                   )}
                 </p>
-
 
                 <p style={{ fontSize: "0.8rem", color: "#777" }}>
                   By: <strong>{blog.postedBy?.username || "Unknown"}</strong> | {likes.length} Likes
