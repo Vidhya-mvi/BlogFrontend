@@ -4,7 +4,7 @@ import axios from "axios";
 import debounce from "lodash.debounce"; 
 
 
-const SearchBar = () => {
+const Searchbar = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -116,4 +116,4 @@ const SearchBar = () => {
   );
 };
 
-export default SearchBar;
+export default Searchbar;
