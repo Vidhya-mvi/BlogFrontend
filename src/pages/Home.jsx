@@ -18,10 +18,18 @@ const Home = () => {
 useEffect(() => {
   const fetchBlogs = async () => {
     try {
-      const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/blogs`, { withCredentials: true });
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/blogs`, { 
+        withCredentials: true,
+        headers: { "Cache-Control": "no-cache" } // prevent stale 304
+      });
 
-    
-      const blogsData = Array.isArray(res.data) ? res.data : res.data.blogs || [];
+      // Make sure we always have an array
+      const blogsData = Array.isArray(res.data) 
+        ? res.data 
+        : res.data.blogs && Array.isArray(res.data.blogs) 
+          ? res.data.blogs 
+          : [];
+
       setBlogs(blogsData);
     } catch (err) {
       console.error("Failed to fetch blogs:", err);
@@ -32,6 +40,7 @@ useEffect(() => {
   };
   fetchBlogs();
 }, []);
+
 
 
   const handleLike = async (id) => {
