@@ -10,7 +10,7 @@ import CreateBlog from "./pages/CreateBlog";
 import MyBlogs from "./pages/MyBlogs";
 import AdminDashboard from "./pages/AdminDashboard";
 import ErrorPage from "./pages/ErrorPage";
-import EditBlog from "./pages/EditBlog";
+// import EditBlog from "./pages/EditBlog";
 import GenreBlogs from "./pages/GenreBlogs";
 
 function App() {
@@ -34,7 +34,7 @@ function App() {
                 <Route path="/myblogs" element={<MyBlogs />} />
                 
                 <Route path="/admin" element={<AdminDashboard />} />
-                <Route path="/edit/:id" element={<EditBlog />} />
+                {/* <Route path="/edit/:id" element={<EditBlog />} /> */}
                 <Route path="/genre/:genre" element={<GenreBlogs />} />
               </Routes>
             </Layout>
