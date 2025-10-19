@@ -15,20 +15,24 @@ const Home = () => {
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user"));
 
-  useEffect(() => {
-    const fetchBlogs = async () => {
-      try {
-        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/blogs`, { withCredentials: true });
-        setBlogs(res.data.blogs || res.data || []);
-      } catch (err) {
-        console.error("Failed to fetch blogs:", err);
-        setBlogs([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchBlogs();
-  }, []);
+useEffect(() => {
+  const fetchBlogs = async () => {
+    try {
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/blogs`, { withCredentials: true });
+
+    
+      const blogsData = Array.isArray(res.data) ? res.data : res.data.blogs || [];
+      setBlogs(blogsData);
+    } catch (err) {
+      console.error("Failed to fetch blogs:", err);
+      setBlogs([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+  fetchBlogs();
+}, []);
+
 
   const handleLike = async (id) => {
     if (!user) return toast.warn("Please log in to like blogs!");
