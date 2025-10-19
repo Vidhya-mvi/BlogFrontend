@@ -21,7 +21,7 @@ const EditBlog = () => {
   useEffect(() => {
     const fetchBlog = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/blogs/${id}`, {
+        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/blogs/${id}`, {
           withCredentials: true,
         });
 
@@ -30,12 +30,12 @@ const EditBlog = () => {
         setGenre(res.data.genre || "");
 
         if (res.data.image) {
-          setPreview(`http://localhost:5000${res.data.image}`);
-        }}catch (err) {
-          console.error(" Failed to fetch blog:", err.response || err.message);
-          setError(err.response?.data?.message || "Failed to load blog. Please try again.");
+          setPreview(`${import.meta.env.VITE_API_URL}${res.data.image}`);
         }
-        
+      } catch (err) {
+        console.error(" Failed to fetch blog:", err.response || err.message);
+        setError(err.response?.data?.message || "Failed to load blog. Please try again.");
+      }
     };
 
     fetchBlog();
