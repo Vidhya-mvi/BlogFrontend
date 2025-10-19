@@ -243,7 +243,7 @@ const BlogDetails = () => {
         <h4 style={{ marginTop: "20px", color: "#444" }}>Comments</h4>
 
         <ul style={{ listStyle: "none", padding: 0, marginTop: "10px", textAlign: "left" }}>
-          {blog.comments.length > 0 ? (
+          {blog?.comments?.length > 0 ?  (
             blog.comments.map((comment) => (
               <li key={comment._id} style={{ marginBottom: "8px", padding: "8px", borderBottom: "1px solid #ddd", color: "#444" }}>
                 <strong>{comment.postedBy?.username}:</strong> {comment.text}
