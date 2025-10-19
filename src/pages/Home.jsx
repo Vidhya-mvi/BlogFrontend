@@ -15,45 +15,40 @@ const Home = () => {
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user"));
 
-  useEffect(() => {
-    const fetchBlogs = async () => {
-      try {
-        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/blogs`, {
-          withCredentials: true,
-          headers: { "Cache-Control": "no-cache" }, // prevent stale 304
-        });
+useEffect(() => {
+  const fetchBlogs = async () => {
+    try {
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/blogs`, { 
+        withCredentials: true,
+        headers: { "Cache-Control": "no-cache" } // prevent stale 304
+      });
 
-        const blogsData = Array.isArray(res.data)
-          ? res.data
-          : res.data.blogs && Array.isArray(res.data.blogs)
-          ? res.data.blogs
+      const blogsData = Array.isArray(res.data) 
+        ? res.data 
+        : res.data.blogs && Array.isArray(res.data.blogs) 
+          ? res.data.blogs 
           : [];
 
-        setBlogs(blogsData);
-      } catch (err) {
-        console.error("Failed to fetch blogs:", err);
-        setBlogs([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchBlogs();
-  }, []);
+      setBlogs(blogsData);
+    } catch (err) {
+      console.error("Failed to fetch blogs:", err);
+      setBlogs([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+  fetchBlogs();
+}, []);
+
+
 
   const handleLike = async (id) => {
     if (!user) return toast.warn("Please log in to like blogs!");
 
     try {
-      const res = await axios.put(
-        `${import.meta.env.VITE_API_URL}/api/blogs/like/${id}`,
-        {},
-        { withCredentials: true }
-      );
-
+      const res = await axios.put(`${import.meta.env.VITE_API_URL}/api/blogs/like/${id}`, {}, { withCredentials: true });
       if (res.data && Array.isArray(res.data.likes)) {
-        setBlogs((prev) =>
-          prev.map((b) => (b._id === id ? { ...b, likes: res.data.likes } : b))
-        );
+        setBlogs((prev) => prev.map((b) => (b._id === id ? { ...b, likes: res.data.likes } : b)));
         toast(res.data.message);
       }
     } catch (err) {
@@ -71,15 +66,8 @@ const Home = () => {
     if (!comment?.trim()) return toast.error("Comment cannot be empty");
 
     try {
-      const res = await axios.post(
-        `${import.meta.env.VITE_API_URL}/api/blogs/comment/${id}`,
-        { text: comment },
-        { withCredentials: true }
-      );
-
-      setBlogs((prev) =>
-        prev.map((blog) => (blog._id === id ? { ...blog, comments: res.data.comments || [] } : blog))
-      );
+      const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/blogs/comment/${id}`, { text: comment }, { withCredentials: true });
+      setBlogs((prev) => prev.map((blog) => (blog._id === id ? { ...blog, comments: res.data.comments || [] } : blog)));
       setCommentText((prev) => ({ ...prev, [id]: "" }));
     } catch (err) {
       console.error("Failed to add comment:", err);
@@ -91,6 +79,7 @@ const Home = () => {
   const toggleComments = (id) => setShowComments((prev) => ({ ...prev, [id]: !prev[id] }));
 
   if (loading) return <h3 style={{ color: "black" }}>Loading blogs...</h3>;
+  if (!loading && blogs.length === 0) return <h3 style={{ color: "black" }}>No blogs found.</h3>;
 
   return (
     <div style={{ padding: "20px" }}>
@@ -108,165 +97,123 @@ const Home = () => {
           paddingRight: "10px",
         }}
       >
-        {Array.isArray(blogs) && blogs.length > 0 ? (
-          blogs.map((blog) => {
-            const likes = Array.isArray(blog.likes) ? blog.likes : [];
-            const comments = Array.isArray(blog.comments) ? blog.comments : [];
+        {blogs.map((blog) => {
+          const likes = Array.isArray(blog.likes) ? blog.likes : [];
+          const comments = Array.isArray(blog.comments) ? blog.comments : [];
 
-            return (
-              <div
-                key={blog._id}
-                style={{
-                  border: "1px solid #ddd",
-                  borderRadius: "8px",
-                  boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
-                  cursor: "pointer",
-                  transition: "transform 0.2s ease",
-                  display: "flex",
-                  flexDirection: "column",
-                }}
-                onClick={() => navigate(`/blogs/${blog._id}`)}
-                onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.02)")}
-                onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
-              >
-                {blog.image && (
-                  <img
-                    src={
-                      blog.image.startsWith("http")
-                        ? blog.image
-                        : `${import.meta.env.VITE_API_URL}/${blog.image}`
-                    }
-                    alt={blog.title}
-                    style={{ width: "100%", height: "300px", objectFit: "cover", backgroundColor: "#f0f0f0" }}
-                    onError={(e) => (e.target.src = "/placeholder.png")}
-                  />
+          return (
+            <div
+              key={blog._id}
+              style={{
+                border: "1px solid #ddd",
+                borderRadius: "8px",
+                boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
+                cursor: "pointer",
+                transition: "transform 0.2s ease",
+                display: "flex",
+                flexDirection: "column",
+              }}
+              onClick={() => navigate(`/blogs/${blog._id}`)}
+              onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.02)")}
+              onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
+            >
+              {blog.image && (
+                <img
+                  src={blog.image.startsWith("http") ? blog.image : `${import.meta.env.VITE_API_URL}/${blog.image}`}
+                  alt={blog.title}
+                  style={{ width: "100%", height: "300px", objectFit: "cover", backgroundColor: "#f0f0f0" }}
+                  onError={(e) => (e.target.src = "/placeholder.png")}
+                />
+              )}
+
+              <div style={{ padding: "10px" }}>
+                <h2 style={{ fontSize: "1rem", color: "#333" }}>{blog.title}</h2>
+
+                <p style={{ color: "#555", fontSize: "0.8rem" }}>
+                  {expandedBlogs[blog._id] || (blog.content || "").length <= 80
+                    ? blog.content || ""
+                    : `${(blog.content || "").substring(0, 80)}... `}
+                  {(blog.content || "").length > 80 && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); toggleExpand(blog._id); }}
+                      style={{ background: "none", color: "#3498db", border: "none", cursor: "pointer", fontWeight: "bold", fontSize: "0.8rem" }}
+                    >
+                      {expandedBlogs[blog._id] ? "Show Less" : "Show More"}
+                    </button>
+                  )}
+                </p>
+
+                <p style={{ fontSize: "0.8rem", color: "#777" }}>
+                  By: <strong>{blog.postedBy?.username || "Unknown"}</strong> | {likes.length} Likes
+                </p>
+
+                <p style={{ fontSize: "0.8rem", color: "#3498db", fontWeight: "bold" }}>
+                  Genre: {blog.genre || "Unknown"}
+                </p>
+
+                {user ? (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleLike(blog._id); }}
+                    style={{
+                      backgroundColor: likes.includes(user._id) ? "#e74c3c" : "#4CAF50",
+                      color: "#fff",
+                      border: "none",
+                      padding: "5px 10px",
+                      cursor: "pointer",
+                      borderRadius: "5px",
+                      fontWeight: "bold",
+                      fontSize: "0.8rem",
+                    }}
+                  >
+                    {likes.includes(user._id) ? "Unlike" : "Like"}
+                  </button>
+                ) : (
+                  <p style={{ color: "gray", fontSize: "0.8rem" }}>Log in to like</p>
                 )}
 
-                <div style={{ padding: "10px" }}>
-                  <h2 style={{ fontSize: "1rem", color: "#333" }}>{blog.title}</h2>
-
-                  <p style={{ color: "#555", fontSize: "0.8rem" }}>
-                    {expandedBlogs[blog._id] || (blog.content || "").length <= 80
-                      ? blog.content || ""
-                      : `${(blog.content || "").substring(0, 80)}... `}
-                    {(blog.content || "").length > 80 && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleExpand(blog._id);
-                        }}
-                        style={{
-                          background: "none",
-                          color: "#3498db",
-                          border: "none",
-                          cursor: "pointer",
-                          fontWeight: "bold",
-                          fontSize: "0.8rem",
-                        }}
-                      >
-                        {expandedBlogs[blog._id] ? "Show Less" : "Show More"}
-                      </button>
-                    )}
-                  </p>
-
-                  <p style={{ fontSize: "0.8rem", color: "#777" }}>
-                    By: <strong>{blog.postedBy?.username || "Unknown"}</strong> | {likes.length} Likes
-                  </p>
-
-                  <p style={{ fontSize: "0.8rem", color: "#3498db", fontWeight: "bold" }}>
-                    Genre: {blog.genre || "Unknown"}
-                  </p>
-
-                  {user ? (
+                {user && (
+                  <div style={{ marginTop: "10px" }}>
+                    <input
+                      type="text"
+                      placeholder="Add a comment..."
+                      value={commentText[blog._id] || ""}
+                      onChange={(e) => handleInputChange(blog._id, e.target.value)}
+                      onClick={(e) => e.stopPropagation()}
+                      style={{ width: "70%", padding: "5px", borderRadius: "5px", border: "1px solid #ddd", fontSize: "0.8rem" }}
+                    />
                     <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleLike(blog._id);
-                      }}
-                      style={{
-                        backgroundColor: likes.includes(user._id) ? "#e74c3c" : "#4CAF50",
-                        color: "#fff",
-                        border: "none",
-                        padding: "5px 10px",
-                        cursor: "pointer",
-                        borderRadius: "5px",
-                        fontWeight: "bold",
-                        fontSize: "0.8rem",
-                      }}
+                      onClick={(e) => { e.stopPropagation(); handleComment(blog._id); }}
+                      style={{ padding: "5px", borderRadius: "5px", border: "none", backgroundColor: "#3498db", color: "#fff", fontWeight: "bold", fontSize: "0.8rem", cursor: "pointer" }}
+                      title="Add Comment"
                     >
-                      {likes.includes(user._id) ? "Unlike" : "Like"}
+                      <FontAwesomeIcon icon={faCommentDots} />
                     </button>
-                  ) : (
-                    <p style={{ color: "gray", fontSize: "0.8rem" }}>Log in to like</p>
-                  )}
+                  </div>
+                )}
 
-                  {user && (
-                    <div style={{ marginTop: "10px" }}>
-                      <input
-                        type="text"
-                        placeholder="Add a comment..."
-                        value={commentText[blog._id] || ""}
-                        onChange={(e) => handleInputChange(blog._id, e.target.value)}
-                        onClick={(e) => e.stopPropagation()}
-                        style={{
-                          width: "70%",
-                          padding: "5px",
-                          borderRadius: "5px",
-                          border: "1px solid #ddd",
-                          fontSize: "0.8rem",
-                        }}
-                      />
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleComment(blog._id);
-                        }}
-                        style={{
-                          padding: "5px",
-                          borderRadius: "5px",
-                          border: "none",
-                          backgroundColor: "#3498db",
-                          color: "#fff",
-                          fontWeight: "bold",
-                          fontSize: "0.8rem",
-                          cursor: "pointer",
-                        }}
-                        title="Add Comment"
-                      >
-                        <FontAwesomeIcon icon={faCommentDots} />
-                      </button>
-                    </div>
-                  )}
+                {comments.length > 0 ? (
+                  <>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); toggleComments(blog._id); }}
+                      style={{ background: "none", color: "#3498db", border: "none", cursor: "pointer" }}
+                    >
+                      {showComments[blog._id] ? "Hide Comments" : "Show Comments"}
+                    </button>
 
-                  {comments.length > 0 ? (
-                    <>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleComments(blog._id);
-                        }}
-                        style={{ background: "none", color: "#3498db", border: "none", cursor: "pointer" }}
-                      >
-                        {showComments[blog._id] ? "Hide Comments" : "Show Comments"}
-                      </button>
-
-                      {showComments[blog._id] &&
-                        comments.map((comment, index) => (
-                          <p key={index} style={{ fontSize: "0.8rem", color: "#555" }}>
-                            <strong>{comment.postedBy?.username || "Unknown"}</strong> - {comment.text}
-                          </p>
-                        ))}
-                    </>
-                  ) : (
-                    <p style={{ fontSize: "0.8rem", color: "#777" }}>No comments here</p>
-                  )}
-                </div>
+                    {showComments[blog._id] &&
+                      comments.map((comment, index) => (
+                        <p key={index} style={{ fontSize: "0.8rem", color: "#555" }}>
+                          <strong>{comment.postedBy?.username || "Unknown"}</strong> - {comment.text}
+                        </p>
+                      ))}
+                  </>
+                ) : (
+                  <p style={{ fontSize: "0.8rem", color: "#777" }}>No comments here</p>
+                )}
               </div>
-            );
-          })
-        ) : (
-          <h3 style={{ color: "black" }}>No blogs found.</h3>
-        )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
