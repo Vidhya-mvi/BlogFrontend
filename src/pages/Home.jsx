@@ -20,11 +20,11 @@ const Home = () => {
       try {
         const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/blogs`, {
           withCredentials: true,
-          headers: { "Cache-Control": "no-cache" }
+          headers: { "Cache-Control": "no-cache" }, // avoid 304 cached response
         });
-        const blogsData = Array.isArray(res.data) ? res.data : [];
+
+        const blogsData = Array.isArray(res.data) ? res.data : res.data.blogs || [];
         setBlogs(blogsData);
-        console.log("Fetched blogs:", blogsData);
       } catch (err) {
         console.error("Failed to fetch blogs:", err);
         setBlogs([]);
@@ -37,18 +37,27 @@ const Home = () => {
 
   const handleLike = async (id) => {
     if (!user) return toast.warn("Please log in to like blogs!");
+
     try {
-      const res = await axios.put(`${import.meta.env.VITE_API_URL}/api/blogs/like/${id}`, {}, { withCredentials: true });
-      const updatedLikes = Array.isArray(res.data.likes) ? res.data.likes : [];
-      setBlogs(prev => prev.map(b => (b._id === id ? { ...b, likes: updatedLikes } : b)));
-      toast(res.data.message || "Action completed");
+      const res = await axios.put(
+        `${import.meta.env.VITE_API_URL}/api/blogs/like/${id}`,
+        {},
+        { withCredentials: true }
+      );
+
+      if (res.data && Array.isArray(res.data.likes)) {
+        setBlogs((prev) =>
+          prev.map((b) => (b._id === id ? { ...b, likes: res.data.likes } : b))
+        );
+        toast(res.data.message);
+      }
     } catch (err) {
       console.error("Failed to like/unlike blog:", err.response?.data || err.message);
     }
   };
 
   const handleInputChange = (id, value) => {
-    setCommentText(prev => ({ ...prev, [id]: value }));
+    setCommentText((prev) => ({ ...prev, [id]: value }));
   };
 
   const handleComment = async (id) => {
@@ -57,45 +66,52 @@ const Home = () => {
     if (!comment?.trim()) return toast.error("Comment cannot be empty");
 
     try {
-      const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/blogs/comment/${id}`, { text: comment }, { withCredentials: true });
-      const updatedComments = Array.isArray(res.data.comments) ? res.data.comments : [];
-      setBlogs(prev => prev.map(blog => (blog._id === id ? { ...blog, comments: updatedComments } : blog)));
-      setCommentText(prev => ({ ...prev, [id]: "" }));
+      const res = await axios.post(
+        `${import.meta.env.VITE_API_URL}/api/blogs/comment/${id}`,
+        { text: comment },
+        { withCredentials: true }
+      );
+
+      setBlogs((prev) =>
+        prev.map((blog) => (blog._id === id ? { ...blog, comments: res.data.comments || [] } : blog))
+      );
+      setCommentText((prev) => ({ ...prev, [id]: "" }));
     } catch (err) {
       console.error("Failed to add comment:", err);
       toast.error("Failed to add comment. Please try again.");
     }
   };
 
-  const toggleExpand = (id) => setExpandedBlogs(prev => ({ ...prev, [id]: !prev[id] }));
-  const toggleComments = (id) => setShowComments(prev => ({ ...prev, [id]: !prev[id] }));
+  const toggleExpand = (id) => setExpandedBlogs((prev) => ({ ...prev, [id]: !prev[id] }));
+  const toggleComments = (id) => setShowComments((prev) => ({ ...prev, [id]: !prev[id] }));
 
   if (loading) return <h3 style={{ color: "black" }}>Loading blogs...</h3>;
+  if (!loading && blogs.length === 0) return <h3 style={{ color: "black" }}>No blogs found.</h3>;
 
   return (
     <div style={{ padding: "20px" }}>
       <h1 style={{ color: "black" }}>Latest Blogs</h1>
       <ToastContainer position="top-right" autoClose={2000} />
 
-      {Array.isArray(blogs) && blogs.length > 0 ? (
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
-            gap: "15px",
-            maxHeight: "80vh",
-            overflowY: "auto",
-            scrollBehavior: "smooth",
-            paddingRight: "10px",
-          }}
-        >
-          {blogs.map((blog) => {
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
+          gap: "15px",
+          maxHeight: "80vh",
+          overflowY: "auto",
+          scrollBehavior: "smooth",
+          paddingRight: "10px",
+        }}
+      >
+        {Array.isArray(blogs) && blogs.length > 0 ? (
+          blogs.map((blog) => {
             const likes = Array.isArray(blog.likes) ? blog.likes : [];
             const comments = Array.isArray(blog.comments) ? blog.comments : [];
 
             return (
               <div
-                key={blog._id || Math.random()}
+                key={blog._id}
                 style={{
                   border: "1px solid #ddd",
                   borderRadius: "8px",
@@ -105,25 +121,27 @@ const Home = () => {
                   display: "flex",
                   flexDirection: "column",
                 }}
-                onClick={() => blog._id && navigate(`/blogs/${blog._id}`)}
+                onClick={() => navigate(`/blogs/${blog._id}`)}
                 onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.02)")}
                 onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
               >
                 {blog.image && (
                   <img
                     src={blog.image.startsWith("http") ? blog.image : `${import.meta.env.VITE_API_URL}/${blog.image}`}
-                    alt={blog.title || "Blog Image"}
+                    alt={blog.title}
                     style={{ width: "100%", height: "300px", objectFit: "cover", backgroundColor: "#f0f0f0" }}
                     onError={(e) => (e.target.src = "/placeholder.png")}
                   />
                 )}
 
                 <div style={{ padding: "10px" }}>
-                  <h2 style={{ fontSize: "1rem", color: "#333" }}>{blog.title || "Untitled"}</h2>
+                  <h2 style={{ fontSize: "1rem", color: "#333" }}>{blog.title}</h2>
 
                   <p style={{ color: "#555", fontSize: "0.8rem" }}>
-                    {expandedBlogs[blog._id] || !blog.content ? blog.content || "No content" : `${blog.content.substring(0, 80)}... `}
-                    {blog.content && blog.content.length > 80 && (
+                    {expandedBlogs[blog._id] || (blog.content || "").length <= 80
+                      ? blog.content || ""
+                      : `${(blog.content || "").substring(0, 80)}... `}
+                    {(blog.content || "").length > 80 && (
                       <button
                         onClick={(e) => { e.stopPropagation(); toggleExpand(blog._id); }}
                         style={{ background: "none", color: "#3498db", border: "none", cursor: "pointer", fontWeight: "bold", fontSize: "0.8rem" }}
@@ -193,7 +211,7 @@ const Home = () => {
                       {showComments[blog._id] &&
                         comments.map((comment, index) => (
                           <p key={index} style={{ fontSize: "0.8rem", color: "#555" }}>
-                            <strong>{comment.postedBy?.username || "Unknown"}</strong> - {comment.text || ""}
+                            <strong>{comment.postedBy?.username || "Unknown"}</strong> - {comment.text}
                           </p>
                         ))}
                     </>
@@ -203,11 +221,11 @@ const Home = () => {
                 </div>
               </div>
             );
-          })}
-        </div>
-      ) : (
-        <h3 style={{ color: "black" }}>No blogs found.</h3>
-      )}
+          })
+        ) : (
+          <h3 style={{ color: "black" }}>No blogs found.</h3>
+        )}
+      </div>
     </div>
   );
 };
