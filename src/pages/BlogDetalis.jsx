@@ -10,19 +10,18 @@ const BlogDetails = () => {
   const [commentText, setCommentText] = useState("");
   const [loading, setLoading] = useState(true);
 
+  // Read user from localStorage and normalize ID
   const storedUser = localStorage.getItem("user");
   const user = storedUser ? JSON.parse(storedUser) : null;
-  const userId = user?._id || user?.id;
-
-  // Get token from localStorage
-  const token = localStorage.getItem("token");
+  const userId = user?._id || user?.id; // handles both _id or id
 
   useEffect(() => {
     const fetchBlog = async () => {
       setLoading(true);
       try {
         const res = await axios.get(
-          `${import.meta.env.VITE_API_URL}/api/blogs/${id}`
+          `${import.meta.env.VITE_API_URL}/api/blogs/${id}`,
+          { withCredentials: true }
         );
         setBlog(res.data || {});
       } catch (err) {
@@ -48,16 +47,13 @@ const BlogDetails = () => {
     });
   };
 
-  // Like / Unlike Blog
   const handleLike = async () => {
     if (!userId) return toast.warn("Please log in to like blogs!");
     try {
       const res = await axios.put(
         `${import.meta.env.VITE_API_URL}/api/blogs/like/${id}`,
         {},
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        { withCredentials: true }
       );
       setBlog((prev) => ({
         ...prev,
@@ -70,7 +66,6 @@ const BlogDetails = () => {
     }
   };
 
-  // Add Comment
   const handleAddComment = async () => {
     if (!userId) return toast.warn("Please log in to comment!");
     if (!commentText.trim()) return toast.warn("Comment cannot be empty!");
@@ -78,9 +73,7 @@ const BlogDetails = () => {
       const res = await axios.post(
         `${import.meta.env.VITE_API_URL}/api/blogs/comment/${id}`,
         { text: commentText },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        { withCredentials: true }
       );
       setBlog(res.data || {});
       setCommentText("");
@@ -91,15 +84,12 @@ const BlogDetails = () => {
     }
   };
 
-  // Delete Comment
   const handleDeleteComment = async (commentId) => {
     if (!userId) return toast.warn("Please log in to delete comments!");
     try {
       await axios.delete(
         `${import.meta.env.VITE_API_URL}/api/blogs/comment/${id}/${commentId}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        { withCredentials: true }
       );
       setBlog((prev) => ({
         ...prev,
@@ -144,6 +134,7 @@ const BlogDetails = () => {
           width: "90%",
           maxWidth: "600px",
           textAlign: "center",
+          animation: "fadeIn 0.5s ease-in-out",
         }}
       >
         <h1 style={{ marginBottom: "10px", color: "#333" }}>{safeBlog.title || "Untitled Blog"}</h1>
@@ -156,7 +147,13 @@ const BlogDetails = () => {
                 : `${import.meta.env.VITE_API_URL}/${safeBlog.image.replace(/^\//, "")}`
             }
             alt="Blog"
-            style={{ width: "100%", maxHeight: "500px", objectFit: "contain", borderRadius: "10px", marginBottom: "15px" }}
+            style={{
+              width: "100%",
+              maxHeight: "500px",
+              objectFit: "contain",
+              borderRadius: "10px",
+              marginBottom: "15px",
+            }}
             onError={(e) => {
               e.target.onerror = null;
               e.target.src = `${import.meta.env.VITE_API_URL}/fallback.jpg`;
@@ -183,7 +180,11 @@ const BlogDetails = () => {
           style={{
             marginTop: "10px",
             padding: "8px 12px",
-            backgroundColor: userId ? (safeBlog.likes?.includes(userId) ? "#e74c3c" : "#3498db") : "#ccc",
+            backgroundColor: userId
+              ? safeBlog.likes?.includes(userId)
+                ? "#e74c3c"
+                : "#3498db"
+              : "#ccc",
             color: "#fff",
             border: "none",
             borderRadius: "5px",
@@ -192,7 +193,11 @@ const BlogDetails = () => {
             opacity: userId ? 1 : 0.6,
           }}
         >
-          {userId ? (safeBlog.likes?.includes(userId) ? "Liked" : "Like") : "Like"} ({safeBlog.likes?.length || 0})
+          {userId
+            ? safeBlog.likes?.includes(userId)
+              ? "Liked"
+              : "Like"
+            : "Like"} ({safeBlog.likes?.length || 0})
         </button>
 
         {userId ? (
@@ -202,11 +207,24 @@ const BlogDetails = () => {
               placeholder="Add a comment..."
               value={commentText}
               onChange={(e) => setCommentText(e.target.value)}
-              style={{ flex: 1, padding: "8px", borderRadius: "5px", border: "1px solid #ddd" }}
+              style={{
+                flex: 1,
+                padding: "8px",
+                borderRadius: "5px",
+                border: "1px solid #ddd",
+              }}
             />
             <button
               onClick={handleAddComment}
-              style={{ padding: "8px 10px", borderRadius: "5px", border: "none", backgroundColor: "#3498db", color: "#fff", fontWeight: "bold", cursor: "pointer" }}
+              style={{
+                padding: "8px 10px",
+                borderRadius: "5px",
+                border: "none",
+                backgroundColor: "#3498db",
+                color: "#fff",
+                fontWeight: "bold",
+                cursor: "pointer",
+              }}
             >
               Comment
             </button>
@@ -220,16 +238,33 @@ const BlogDetails = () => {
         <ul style={{ listStyle: "none", padding: 0, marginTop: "10px", textAlign: "left" }}>
           {safeBlog.comments?.length > 0 ? (
             safeBlog.comments.map((comment) => (
-              <li key={comment._id} style={{ marginBottom: "8px", padding: "8px", borderBottom: "1px solid #ddd", color: "#444" }}>
+              <li
+                key={comment._id}
+                style={{
+                  marginBottom: "8px",
+                  padding: "8px",
+                  borderBottom: "1px solid #ddd",
+                  color: "#444",
+                }}
+              >
                 <strong>{comment.postedBy?.username || "Unknown"}:</strong> {comment.text}
-                {userId && (comment.postedBy?._id === userId || user.role === "admin") && (
-                  <button
-                    onClick={() => handleDeleteComment(comment._id)}
-                    style={{ marginLeft: "10px", backgroundColor: "#e74c3c", color: "#fff", border: "none", borderRadius: "5px", cursor: "pointer", fontSize: "0.8rem" }}
-                  >
-                    Delete
-                  </button>
-                )}
+                {userId &&
+                  (comment.postedBy?._id === userId || user.role === "admin") && (
+                    <button
+                      onClick={() => handleDeleteComment(comment._id)}
+                      style={{
+                        marginLeft: "10px",
+                        backgroundColor: "#e74c3c",
+                        color: "#fff",
+                        border: "none",
+                        borderRadius: "5px",
+                        cursor: "pointer",
+                        fontSize: "0.8rem",
+                      }}
+                    >
+                      Delete
+                    </button>
+                  )}
               </li>
             ))
           ) : (
