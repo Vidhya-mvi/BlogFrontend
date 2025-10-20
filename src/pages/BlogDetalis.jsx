@@ -9,8 +9,11 @@ const BlogDetails = () => {
   const [blog, setBlog] = useState(null);
   const [commentText, setCommentText] = useState("");
   const [loading, setLoading] = useState(true);
+
+  // Get logged-in user
   const storedUser = localStorage.getItem("user");
   const user = storedUser ? JSON.parse(storedUser) : null;
+  const userId = user?._id || user?.id;
 
   useEffect(() => {
     const fetchBlog = async () => {
@@ -44,11 +47,11 @@ const BlogDetails = () => {
     });
   };
 
-  const handleLike = async (blogId) => {
-    if (!user?._id) return toast.warn("Please log in to like blogs!");
+  const handleLike = async () => {
+    if (!userId) return toast.warn("Please log in to like blogs!");
     try {
       const res = await axios.put(
-        `${import.meta.env.VITE_API_URL}/api/blogs/like/${blogId}`,
+        `${import.meta.env.VITE_API_URL}/api/blogs/like/${id}`,
         {},
         { withCredentials: true }
       );
@@ -64,7 +67,7 @@ const BlogDetails = () => {
   };
 
   const handleAddComment = async () => {
-    if (!user?._id) return toast.warn("Please log in to comment!");
+    if (!userId) return toast.warn("Please log in to comment!");
     if (!commentText.trim()) return toast.warn("Comment cannot be empty!");
     try {
       const res = await axios.post(
@@ -82,7 +85,7 @@ const BlogDetails = () => {
   };
 
   const handleDeleteComment = async (commentId) => {
-    if (!user?._id) return toast.warn("Please log in to delete comments!");
+    if (!userId) return toast.warn("Please log in to delete comments!");
     try {
       await axios.delete(
         `${import.meta.env.VITE_API_URL}/api/blogs/comment/${id}/${commentId}`,
@@ -107,7 +110,6 @@ const BlogDetails = () => {
       </div>
     );
 
-  // Ensure blog is always an object to prevent crashes
   const safeBlog = blog || {};
 
   return (
@@ -135,7 +137,9 @@ const BlogDetails = () => {
           animation: "fadeIn 0.5s ease-in-out",
         }}
       >
-        <h1 style={{ marginBottom: "10px", color: "#333" }}>{safeBlog.title || "Untitled Blog"}</h1>
+        <h1 style={{ marginBottom: "10px", color: "#333" }}>
+          {safeBlog.title || "Untitled Blog"}
+        </h1>
 
         {safeBlog.image && (
           <img
@@ -159,7 +163,6 @@ const BlogDetails = () => {
           />
         )}
 
-
         <p style={{ fontSize: "0.8rem", color: "#3498db", fontWeight: "bold" }}>
           Genre: {safeBlog.genre || "Unknown"}
         </p>
@@ -173,31 +176,35 @@ const BlogDetails = () => {
           <strong>By:</strong> {safeBlog.postedBy?.username || "Unknown"}
         </p>
 
+        {/* Like Button */}
         <button
-          onClick={() => handleLike(safeBlog._id)}
-          disabled={!user?._id}
+          onClick={handleLike}
+          disabled={!userId}
           style={{
             marginTop: "10px",
             padding: "8px 12px",
-            backgroundColor: user?._id
-              ? (safeBlog.likes?.includes(user._id) ? "#e74c3c" : "#3498db")
+            backgroundColor: userId
+              ? safeBlog.likes?.includes(userId)
+                ? "#e74c3c"
+                : "#3498db"
               : "#ccc",
             color: "#fff",
             border: "none",
             borderRadius: "5px",
-            cursor: user?._id ? "pointer" : "not-allowed",
+            cursor: userId ? "pointer" : "not-allowed",
             fontWeight: "bold",
-            opacity: user?._id ? 1 : 0.6,
+            opacity: userId ? 1 : 0.6,
           }}
         >
-          {user?._id
-            ? safeBlog.likes?.includes(user._id)
+          {userId
+            ? safeBlog.likes?.includes(userId)
               ? "Liked"
               : "Like"
-            : " Like"} ({safeBlog.likes?.length || 0})
+            : "Like"} ({safeBlog.likes?.length || 0})
         </button>
 
-        {user?._id ? (
+        {/* Comment Input */}
+        {userId ? (
           <div style={{ marginTop: "15px", display: "flex", gap: "10px" }}>
             <input
               type="text"
@@ -230,8 +237,8 @@ const BlogDetails = () => {
           <p style={{ color: "gray", fontSize: "0.9rem" }}>Log in to comment</p>
         )}
 
+        {/* Comments */}
         <h4 style={{ marginTop: "20px", color: "#444" }}>Comments</h4>
-
         <ul style={{ listStyle: "none", padding: 0, marginTop: "10px", textAlign: "left" }}>
           {safeBlog.comments?.length > 0 ? (
             safeBlog.comments.map((comment) => (
@@ -245,8 +252,8 @@ const BlogDetails = () => {
                 }}
               >
                 <strong>{comment.postedBy?.username || "Unknown"}:</strong> {comment.text}
-                {user?._id &&
-                  (comment.postedBy?._id === user._id || user.role === "admin") && (
+                {userId &&
+                  (comment.postedBy?._id === userId || user.role === "admin") && (
                     <button
                       onClick={() => handleDeleteComment(comment._id)}
                       style={{
