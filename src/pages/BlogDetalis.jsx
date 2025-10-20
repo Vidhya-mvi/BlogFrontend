@@ -10,10 +10,10 @@ const BlogDetails = () => {
   const [commentText, setCommentText] = useState("");
   const [loading, setLoading] = useState(true);
 
-  // Get logged-in user
+  // Read user from localStorage and normalize ID
   const storedUser = localStorage.getItem("user");
   const user = storedUser ? JSON.parse(storedUser) : null;
-  const userId = user?._id || user?.id;
+  const userId = user?._id || user?.id; // handles both _id or id
 
   useEffect(() => {
     const fetchBlog = async () => {
@@ -137,9 +137,7 @@ const BlogDetails = () => {
           animation: "fadeIn 0.5s ease-in-out",
         }}
       >
-        <h1 style={{ marginBottom: "10px", color: "#333" }}>
-          {safeBlog.title || "Untitled Blog"}
-        </h1>
+        <h1 style={{ marginBottom: "10px", color: "#333" }}>{safeBlog.title || "Untitled Blog"}</h1>
 
         {safeBlog.image && (
           <img
@@ -158,7 +156,7 @@ const BlogDetails = () => {
             }}
             onError={(e) => {
               e.target.onerror = null;
-              e.target.src = "/fallback.jpg";
+              e.target.src = `${import.meta.env.VITE_API_URL}/fallback.jpg`;
             }}
           />
         )}
@@ -176,7 +174,6 @@ const BlogDetails = () => {
           <strong>By:</strong> {safeBlog.postedBy?.username || "Unknown"}
         </p>
 
-        {/* Like Button */}
         <button
           onClick={handleLike}
           disabled={!userId}
@@ -203,7 +200,6 @@ const BlogDetails = () => {
             : "Like"} ({safeBlog.likes?.length || 0})
         </button>
 
-        {/* Comment Input */}
         {userId ? (
           <div style={{ marginTop: "15px", display: "flex", gap: "10px" }}>
             <input
@@ -237,8 +233,8 @@ const BlogDetails = () => {
           <p style={{ color: "gray", fontSize: "0.9rem" }}>Log in to comment</p>
         )}
 
-        {/* Comments */}
         <h4 style={{ marginTop: "20px", color: "#444" }}>Comments</h4>
+
         <ul style={{ listStyle: "none", padding: 0, marginTop: "10px", textAlign: "left" }}>
           {safeBlog.comments?.length > 0 ? (
             safeBlog.comments.map((comment) => (
