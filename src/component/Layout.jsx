@@ -7,6 +7,7 @@ const Layout = ({ children }) => {
   const navigate = useNavigate();
 
   const [showGenres, setShowGenres] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
   const dropdownRef = useRef(null);
 
   const isAdmin = user?.role?.toLowerCase() === "admin";
@@ -27,18 +28,22 @@ const Layout = ({ children }) => {
     "Art",
     "Manhwa",
     "Nature",
-    "myths"
+    "Myths",
   ];
 
   const handleGenreClick = (genre) => {
     const formattedGenre = encodeURIComponent(genre.toLowerCase());
     navigate(`/genre/${formattedGenre}`);
     setShowGenres(false);
+    setShowMenu(false);
   };
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target)
+      ) {
         setShowGenres(false);
       }
     };
@@ -48,6 +53,33 @@ const Layout = ({ children }) => {
 
   return (
     <div style={{ width: "100vw", height: "100vh", margin: "0", padding: "0" }}>
+      <style>
+        {`
+        @media (max-width: 768px) {
+          .nav-links {
+            display: ${showMenu ? "flex" : "none"};
+            flex-direction: column;
+            width: 100%;
+            background-color: #333;
+            position: absolute;
+            top: 60px;
+            left: 0;
+            padding: 10px 0;
+          }
+          .nav-links a, .nav-links button {
+            width: 100%;
+            text-align: center;
+            padding: 10px 0;
+            margin: 0;
+          }
+          .search-bar-container {
+            width: 100%;
+            margin-top: 10px;
+          }
+        }
+        `}
+      </style>
+
       <nav
         style={{
           width: "100%",
@@ -64,58 +96,61 @@ const Layout = ({ children }) => {
           zIndex: 10,
           height: "60px",
           boxSizing: "border-box",
+          flexWrap: "wrap",
         }}
       >
-       
         <div
-          style={{ cursor: "pointer", fontSize: "1.8rem", padding: "0 10px" }}
-          onClick={() => setShowGenres(!showGenres)}
+          style={{ display: "flex", alignItems: "center", gap: "10px" }}
         >
-          ☰
+          <div
+            style={{ cursor: "pointer", fontSize: "1.8rem", display: "flex", alignItems: "center" }}
+            onClick={() => setShowGenres(!showGenres)}
+          >
+            ☰
+          </div>
+
+          <div
+            ref={dropdownRef}
+            style={{
+              position: "absolute",
+              top: "60px",
+              left: "0",
+              backgroundColor: "#444",
+              boxShadow: "0 4px 8px rgba(0,0,0,0.5)",
+              zIndex: "20",
+              width: "200px",
+              padding: "10px 0",
+              borderRadius: "0 0 5px 5px",
+              transform: showGenres ? "translateY(0)" : "translateY(-10px)",
+              opacity: showGenres ? 1 : 0,
+              visibility: showGenres ? "visible" : "hidden",
+              transition: "all 0.3s ease-in-out",
+            }}
+          >
+            {genres.map((genre) => (
+              <div
+                key={genre}
+                onClick={() => handleGenreClick(genre)}
+                style={{
+                  padding: "10px",
+                  color: "#fff",
+                  cursor: "pointer",
+                  textAlign: "center",
+                  borderBottom: "1px solid #555",
+                }}
+              >
+                {genre}
+              </div>
+            ))}
+          </div>
         </div>
 
-        <div
-          ref={dropdownRef}
-          style={{
-            position: "absolute",
-            top: "60px",
-            left: "0",
-            backgroundColor: "#444",
-            boxShadow: "0 4px 8px rgba(0,0,0,0.5)",
-            zIndex: "20",
-            width: "200px",
-            padding: "10px 0",
-            borderRadius: "0 0 5px 5px",
-            transform: showGenres ? "translateY(0)" : "translateY(-10px)",
-            opacity: showGenres ? 1 : 0,
-            visibility: showGenres ? "visible" : "hidden",
-            transition: "all 0.3s ease-in-out",
-          }}
-        >
-          {genres.map((genre) => (
-            <div
-              key={genre}
-              onClick={() => handleGenreClick(genre)}
-              style={{
-                padding: "10px",
-                color: "#fff",
-                cursor: "pointer",
-                textAlign: "center",
-                borderBottom: "1px solid #555",
-              }}
-            >
-              {genre}
-            </div>
-          ))}
-        </div>
-
-      
         <div
           style={{
             fontSize: "1.5rem",
             fontWeight: "bold",
-            flexGrow: 1,
             textAlign: "center",
+            flexGrow: 1,
           }}
         >
           <Link to="/" style={{ color: "#fff", textDecoration: "none" }}>
@@ -123,13 +158,27 @@ const Layout = ({ children }) => {
           </Link>
         </div>
 
-        {/* Search Bar */}
-        <div style={{ flexGrow: 1, display: "flex", justifyContent: "center" }}>
-          <SearchBar />
+        {/* Hamburger for mobile */}
+        <div
+          style={{ fontSize: "1.5rem", cursor: "pointer", display: "none" }}
+          className="hamburger"
+          onClick={() => setShowMenu(!showMenu)}
+        >
+          ☰
         </div>
 
-      
-        <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
+        <div
+          className="nav-links"
+          style={{
+            display: "flex",
+            gap: "15px",
+            alignItems: "center",
+          }}
+        >
+          <div className="search-bar-container">
+            <SearchBar />
+          </div>
+
           {user ? (
             <>
               <Link to="/myblogs" style={{ color: "#fff", textDecoration: "none" }}>
@@ -147,6 +196,22 @@ const Layout = ({ children }) => {
                   Admin Dashboard
                 </Link>
               )}
+
+              <button
+                onClick={handleLogout}
+                style={{
+                  backgroundColor: "#e74c3c",
+                  color: "#fff",
+                  border: "none",
+                  padding: "8px 15px",
+                  cursor: "pointer",
+                  borderRadius: "5px",
+                  fontWeight: "bold",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                Logout
+              </button>
             </>
           ) : (
             <>
@@ -157,25 +222,6 @@ const Layout = ({ children }) => {
                 Login
               </Link>
             </>
-          )}
-
-      
-          {user && (
-            <button
-              onClick={handleLogout}
-              style={{
-                backgroundColor: "#e74c3c",
-                color: "#fff",
-                border: "none",
-                padding: "8px 15px",
-                cursor: "pointer",
-                borderRadius: "5px",
-                fontWeight: "bold",
-                whiteSpace: "nowrap",
-              }}
-            >
-              Logout
-            </button>
           )}
         </div>
       </nav>
