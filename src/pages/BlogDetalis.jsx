@@ -9,7 +9,8 @@ const BlogDetails = () => {
   const [blog, setBlog] = useState(null);
   const [commentText, setCommentText] = useState("");
   const [loading, setLoading] = useState(true);
-  const user = JSON.parse(localStorage.getItem("user")) || {};
+  const storedUser = localStorage.getItem("user");
+  const user = storedUser ? JSON.parse(storedUser) : null;
 
   useEffect(() => {
     const fetchBlog = async () => {
@@ -138,7 +139,11 @@ const BlogDetails = () => {
 
         {safeBlog.image && (
           <img
-            src={safeBlog.image}
+            src={
+              safeBlog.image.startsWith("http")
+                ? safeBlog.image
+                : `${import.meta.env.VITE_API_URL}/${safeBlog.image.replace(/^\//, "")}`
+            }
             alt="Blog"
             style={{
               width: "100%",
@@ -153,6 +158,7 @@ const BlogDetails = () => {
             }}
           />
         )}
+
 
         <p style={{ fontSize: "0.8rem", color: "#3498db", fontWeight: "bold" }}>
           Genre: {safeBlog.genre || "Unknown"}
